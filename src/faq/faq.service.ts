@@ -20,10 +20,11 @@ export class FaqService {
   }
 
   async createParent(data: QuestionDTO): Promise<Question> {
+    const maxOrder: number = await this.getMaxOrderOfChildren(null);
     return this.faqRepository.create({
       ...data,
       parent_question_id: null,
-      order: 1,
+      order: maxOrder + 1,
     });
   }
 
@@ -45,8 +46,9 @@ export class FaqService {
     return this.faqRepository.update(id, data);
   }
 
-  async delete(id: number): Promise<Question> {
+  async delete(id: number): Promise<any> {
     await this.checkQuestionExists(id);
+    await this.deleteChildren(id)
     return this.faqRepository.delete(id);
   }
 
@@ -68,7 +70,7 @@ export class FaqService {
     return tree;
   }
 
-  private async getMaxOrderOfChildren(parentId: number): Promise<number> {
+  private async getMaxOrderOfChildren(parentId: number | null): Promise<number> {
     return this.faqRepository.getMaxOrderOfChildren(parentId);
   }
 
@@ -78,5 +80,12 @@ export class FaqService {
       throw new NotFoundException(`Pergunta com ID ${id} não encontrada.`);
     }
     return existingQuestion;
+  }
+
+  private async deleteChildren(id: number): Promise<void> {
+    const childQuestions = await this.faqRepository.findChildren(id);
+    for (const childQuestion of childQuestions) {
+      await this.delete(childQuestion.id);
+    }
   }
 }

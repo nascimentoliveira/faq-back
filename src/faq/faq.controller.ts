@@ -48,7 +48,7 @@ export class FaqController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<Question> {
+  async delete(@Param('id') id: string): Promise<any> {
     return this.faqService.delete(parseInt(id));
   }
 }

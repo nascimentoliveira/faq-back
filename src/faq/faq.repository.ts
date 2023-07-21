@@ -9,7 +9,11 @@ export class FaqRepository {
   constructor(private readonly prisma: PrismaService) { }
 
   async getAll(): Promise<Question[]> {
-    return await this.prisma.question.findMany();
+    return await this.prisma.question.findMany({
+      orderBy: {
+        order: 'asc',
+      },
+    });
   }
 
   async get(id: number): Promise<Question[] | null> {
@@ -43,7 +47,7 @@ export class FaqRepository {
     });
   }
 
-  async getMaxOrderOfChildren(parentId: number): Promise<number> {
+  async getMaxOrderOfChildren(parentId: number | null): Promise<number> {
     const result = await this.prisma.question.findFirst({
       where: {
         parent_question_id: parentId,
@@ -57,5 +61,11 @@ export class FaqRepository {
     });
 
     return result ? result.order : 0;
+  }
+
+  async findChildren(parentId: number): Promise<Question[]> {
+    return this.prisma.question.findMany({
+      where: { parent_question_id: parentId },
+    });
   }
 }
